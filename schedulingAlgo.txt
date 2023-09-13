@@ -1,0 +1,1211 @@
+#include<iostream>
+#include<conio.h>
+#include<iomanip>
+using namespace std;
+
+struct ProcessDetail{
+	int pid;
+	int arrival_time;
+	int burst_time;
+	int remaining_burst_time;
+	int priority;
+	
+	int response_time;
+	int wait_time;
+	int turnaround_time;
+	
+	int start_time;
+	int complete_time;
+};
+
+
+class FCFSclass{
+	double total_wait_time, total_turnaround_time, total_response_time, average_wait_time, average_turnaround_time, average_response_time ;
+	int number_of_process;
+	ProcessDetail * process;
+	public:
+		SchedulingAlgorithm(){
+			total_wait_time=0;
+			total_turnaround_time=0; 
+			average_wait_time=0; 
+			average_turnaround_time = 0;
+			total_response_time=0; 
+			average_response_time = 0;
+
+		}
+		void input();
+		void FCFS();
+		void output();
+		void sort_arrival_time();	
+};
+
+void FCFSclass::input(){
+	cout<<"\nEnter number of processes :";
+	cin>>number_of_process;
+	process = new ProcessDetail[number_of_process];
+	
+	//enter detail for each process
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n\nEnter details for process "<<i+1;
+		cout<<"\n\t1. Enter PID :";
+		cin>>process[i].pid;
+		cout<<"\t2. Enter Arrival Time :";
+		cin>>process[i].arrival_time;
+		cout<<"\t3. Enter Burst Time :";
+		cin>>process[i].burst_time;
+	}
+}
+
+//function to sort process according to their arrival time
+void FCFSclass::sort_arrival_time(){
+	for(int i=0;i<number_of_process-1;i++){
+		int min = i;
+		for(int j=i+1;j<number_of_process;j++){
+			if(process[j].arrival_time<process[min].arrival_time)
+				min=j;
+		}
+		
+		if(process[min].arrival_time!=process[i].arrival_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//void fcfs
+void FCFSclass::FCFS(){
+	
+		//for visual representation
+		process[0].start_time = process[0].arrival_time;
+		process[0].complete_time = process[0].arrival_time + process[0].burst_time;
+		 
+		//wait time for first process
+		process[0].wait_time = 0;
+		//turnaround time for first process
+		process[0].turnaround_time = process[0].burst_time;
+		
+		
+		//calculate wait time, turnaroundtime and response time for rest processes
+		for(int i=1;i<number_of_process;i++){
+			//for wait time
+			process[i].wait_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time - process[i].arrival_time ;
+			if(process[i].wait_time<0)
+				process[i].wait_time=0;
+		
+			
+			//for visual representation
+			process[i].start_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time ;
+			process[i].complete_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time + process[i].burst_time;
+			
+			if((process[i].arrival_time - process[i-1].complete_time) > 0){
+				process[i].start_time += process[i].arrival_time - process[i-1].complete_time;
+				process[i].complete_time += process[i].arrival_time - process[i-1].complete_time;
+			}
+			else{
+				process[i].start_time+=0;
+				process[i].complete_time+=0;
+			}
+			
+			//for turnaround time
+			process[i].turnaround_time = process[i].complete_time - process[i].arrival_time ;	
+					 		
+		}
+		
+		//response time
+		for(int i=0;i<number_of_process;i++){
+			process[i].response_time = process[i].start_time - process[i].arrival_time; 
+		}
+		
+		//total wait, turnaround and response time
+		for(int i=0;i<number_of_process;i++){
+			total_wait_time += process[i].wait_time; 
+			total_turnaround_time += process[i].turnaround_time; 
+			total_response_time += process[i].response_time; 
+		}
+		
+		//average wait time
+		average_wait_time = total_wait_time/number_of_process;
+				
+		//average turnaround time
+		average_turnaround_time = total_turnaround_time/number_of_process;
+		
+		//average response time
+		average_response_time = total_response_time/number_of_process;
+	}
+
+
+
+//show output
+void FCFSclass::output(){
+	//Tabular Output
+	cout<<"\n\n  =====================================================================================";
+		cout<<"\n   "<<"   PID"<<"   ArrivalTime"<<"   BurstTime"<<"   Wait time"<<"   Turnaround time"<<"     Response Time";
+		cout<<"\n   -----------------------------------------------------------------------------------";
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n   "<<setw(5)<<process[i].pid<<setw(9)<<process[i].arrival_time<<setw(14)<<process[i].burst_time<<setw(12)<<process[i].wait_time<<setw(14)<<process[i].turnaround_time<<setw(18)<<process[i].response_time;
+	}
+	cout<<"\n  =====================================================================================";
+	
+	
+	cout<<"\n\n\nGANTT CHART :\n";
+	//Gantt Chart
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"------------  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|          |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|    "<<process[k].pid<<"     |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|          |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"------------  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+				cout<<process[k].start_time<<setw(11)<<process[k].complete_time<<setw(3);
+		}
+	
+	
+	//Analysis
+	cout<<"\n\nTotal Wait Time :"<<total_wait_time;
+	cout<<"\nAverage Wait Time :"<<average_wait_time;
+	cout<<"\n\nTotal Turnaround Time :"<<total_turnaround_time;
+	cout<<"\nAverage Turnaround Time :"<<average_turnaround_time;
+	cout<<"\n\nTotal Response Time :"<<total_response_time;
+	cout<<"\nAverage Response Time :"<<average_response_time;
+}
+
+//==================================================//
+
+class SJFclass{
+	double total_wait_time, total_turnaround_time, total_response_time, average_wait_time, average_turnaround_time, average_response_time ;
+	int number_of_process, current_time;
+	ProcessDetail * process;
+	public:
+		SJFclass(){
+			total_wait_time=0;
+			total_turnaround_time=0; 
+			average_wait_time=0; 
+			average_turnaround_time = 0;
+			total_response_time=0; 
+			average_response_time = 0;
+			 current_time=0;
+
+		}
+		void input();
+		void SJF();
+		void output();
+		void sort_arrival_time();
+		void assign_queue();
+		void sort_burst_time(int start,int end);	
+};
+
+//input
+void SJFclass::input(){
+	cout<<"\nEnter number of processes :";
+	cin>>number_of_process;
+	process = new ProcessDetail[number_of_process];
+	
+	//enter detail for each process
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n\nEnter details for process "<<i+1;
+		process[i].pid = i+1;
+		cout<<"\n\t1. PID :"<<process[i].pid;
+		cout<<"\n\t2. Enter Arrival Time :";
+		cin>>process[i].arrival_time;
+		cout<<"\t3. Enter Burst Time :";
+		cin>>process[i].burst_time;
+	}
+}
+
+//function to sort process according to their arrival time
+void SJFclass::sort_arrival_time(){
+	for(int i=0;i<number_of_process-1;i++){
+		int min = i;
+		for(int j=i+1;j<number_of_process;j++){
+			if(process[j].arrival_time<process[min].arrival_time)
+				min=j;
+		}
+		
+		if(process[min].arrival_time!=process[i].arrival_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//function to sort process with same arrival time according to their burst time
+void SJFclass::sort_burst_time(int start, int end){
+	for(int i=start;i<end-1;i++){
+		int min = i;
+		for(int j=i+1;j<end;j++){
+			if(process[j].burst_time<process[min].burst_time)
+				min=j;
+		}
+
+		if(process[min].burst_time!=process[i].burst_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//function to apply sorting based on burst time
+void SJFclass::assign_queue(){
+	int i=0;
+	int t=0;
+	for(t=0;t<number_of_process;t++){
+		i=t;
+		while(process[i].arrival_time <= current_time && i<number_of_process){
+			i++;
+		}
+		if((i-t)>1)
+			sort_burst_time(t, i);
+			
+		current_time = current_time+process[t].burst_time;
+	}
+}
+		
+//srtf implementation
+void SJFclass::SJF(){
+	
+		//for visual representation
+		process[0].start_time = process[0].arrival_time;
+		process[0].complete_time = process[0].arrival_time + process[0].burst_time;
+		 
+		//wait time for first process
+		process[0].wait_time = 0;
+		//turnaround time for first process
+		process[0].turnaround_time = process[0].burst_time;
+		
+		
+		//calculate wait time, turnaroundtime and response time for rest processes
+		for(int i=1;i<number_of_process;i++){
+			//for wait time
+			process[i].wait_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time - process[i].arrival_time ;
+			if(process[i].wait_time<0)
+				process[i].wait_time=0;
+		
+			
+			//for visual representation
+			process[i].start_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time ;
+			process[i].complete_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time + process[i].burst_time;
+			
+			if((process[i].arrival_time - process[i-1].complete_time) > 0){
+				process[i].start_time += process[i].arrival_time - process[i-1].complete_time;
+				process[i].complete_time += process[i].arrival_time - process[i-1].complete_time;
+			}
+			else{
+				process[i].start_time+=0;
+				process[i].complete_time+=0;
+			}
+			
+			//for turnaround time
+			process[i].turnaround_time = process[i].complete_time - process[i].arrival_time ;	
+					 		
+		}
+		
+		//response time
+		for(int i=0;i<number_of_process;i++){
+			process[i].response_time = process[i].start_time - process[i].arrival_time; 
+		}
+		
+		//total wait, turnaround and response time
+		for(int i=0;i<number_of_process;i++){
+			total_wait_time += process[i].wait_time; 
+			total_turnaround_time += process[i].turnaround_time; 
+			total_response_time += process[i].response_time; 
+		}
+		
+		//average wait time
+		average_wait_time = total_wait_time/number_of_process;
+				
+		//average turnaround time
+		average_turnaround_time = total_turnaround_time/number_of_process;
+		
+		//average response time
+		average_response_time = total_response_time/number_of_process;
+}
+
+
+
+//output
+void SJFclass::output(){
+	//Tabular Output
+	cout<<"\n\n  =====================================================================================";
+		cout<<"\n   "<<"   PID"<<"   ArrivalTime"<<"   BurstTime"<<"   Wait time"<<"   Turnaround time"<<"     Response Time";
+		cout<<"\n   -----------------------------------------------------------------------------------";
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n   "<<setw(5)<<process[i].pid<<setw(9)<<process[i].arrival_time<<setw(14)<<process[i].burst_time<<setw(12)<<process[i].wait_time<<setw(14)<<process[i].turnaround_time<<setw(18)<<process[i].response_time;
+	}
+	cout<<"\n  =====================================================================================";
+	
+	
+	cout<<"\n\n\nGANTT CHART :\n";
+	//Gantt Chart
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"------------  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|          |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|    "<<process[k].pid<<"     |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|          |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"------------  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+				cout<<process[k].start_time<<setw(11)<<process[k].complete_time<<setw(3);
+		}
+	
+	
+	//Analysis
+	cout<<"\n\nTotal Wait Time :"<<total_wait_time;
+	cout<<"\nAverage Wait Time :"<<average_wait_time;
+	cout<<"\n\nTotal Turnaround Time :"<<total_turnaround_time;
+	cout<<"\nAverage Turnaround Time :"<<average_turnaround_time;
+	cout<<"\n\nTotal Response Time :"<<total_response_time;
+	cout<<"\nAverage Response Time :"<<average_response_time;
+}
+
+
+//=====================================================//
+class SRTF{
+	double total_wait_time, total_turnaround_time, total_response_time, average_wait_time, average_turnaround_time, average_response_time;
+	int total_time,q;
+	int number_of_process, current_time;
+	ProcessDetail * process;
+	ProcessDetail * TEMP;
+	public:
+		SRTF(){
+			total_wait_time=0;
+			total_turnaround_time=0; 
+			average_wait_time=0; 
+			average_turnaround_time = 0;
+			total_response_time=0; 
+			average_response_time = 0;
+			current_time=0;
+			total_time=0;
+			q=0;
+		}
+		void input();
+		void output();
+		void sort_arrival_time();
+		void assign_queue();
+		void sort_remaining_burst_time(int start,int end);	
+};
+
+//input
+void SRTF::input(){
+	cout<<"\nEnter number of processes :";
+	cin>>number_of_process;
+	process = new ProcessDetail[number_of_process];
+	//enter detail for each process
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n\nEnter details for process "<<i+1;
+		process[i].pid = i+1;
+		cout<<"\n\t1. PID :"<<process[i].pid;
+		cout<<"\n\t2. Enter Arrival Time :";
+		cin>>process[i].arrival_time;
+		cout<<"\t3. Enter Burst Time :";
+		cin>>process[i].burst_time;
+		
+		total_time +=process[i].burst_time;  
+		process[i].remaining_burst_time = process[i].burst_time;
+	}
+}
+
+//function to sort process according to their arrival time
+void SRTF::sort_arrival_time(){
+	for(int i=0;i<number_of_process-1;i++){
+		int min = i;
+		for(int j=i+1;j<number_of_process;j++){
+			if(process[j].arrival_time<process[min].arrival_time)
+				min=j;
+		}
+		
+		if(process[min].arrival_time!=process[i].arrival_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//function to sort process with same arrival time according to their burst time
+void SRTF::sort_remaining_burst_time(int start, int end){
+	for(int i=start;i<end-1;i++){
+		int min = i;
+		for(int j=i+1;j<end;j++){
+			if(process[j].burst_time<process[min].burst_time)
+				min=j;
+		}
+
+		if(process[min].burst_time!=process[i].burst_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//assign queue to processes
+void SRTF::assign_queue(){
+	TEMP = new ProcessDetail[total_time];
+	int i=0,p=0;
+	while(i<number_of_process){
+		
+		//section for sorting the process wrt their remaining burst time at a particular currenttime
+			int j=i;
+			while(j<number_of_process){
+				if(process[j].arrival_time>current_time){
+					break;
+				}
+				j++;
+			}
+			sort_remaining_burst_time(i,j);
+		
+		if(current_time<process[i].arrival_time)
+			current_time=process[i].arrival_time;
+		
+		if(process[i].remaining_burst_time==process[i].burst_time){
+			process[i].response_time=current_time - process[i].arrival_time;	
+			process[i].start_time=current_time;
+		}
+		TEMP[p].pid = process[i].pid;
+		TEMP[p].start_time = current_time;
+		
+		process[i].remaining_burst_time--;
+		current_time++;
+		
+		if(process[i].remaining_burst_time==0){
+			process[i].complete_time=current_time;
+			process[i].turnaround_time = process[i].complete_time - process[i].arrival_time;
+			process[i].wait_time = process[i].turnaround_time - process[i].burst_time;
+			
+			total_wait_time+=process[i].wait_time;
+			total_turnaround_time+=process[i].turnaround_time;
+			total_response_time+=process[i].response_time;
+			
+			i++;
+		}
+		
+		TEMP[p].complete_time=current_time;
+		p++;		
+	} 
+	
+	average_wait_time= total_wait_time/number_of_process;
+	average_turnaround_time=total_turnaround_time/number_of_process;
+	average_response_time=total_response_time/number_of_process;
+}
+
+//output
+void SRTF::output(){
+	cout<<"\n\n  ====================================================================================================\n";
+	
+	cout<<setw(1)<<"\tPID"<<setw(15)<<"Arrival Time"<<setw(15)<<"Burst Time"<<setw(15)<<"Waiting Time"<<setw(20)<<"Turnaround Time"<<setw(20)<<"Response Time";
+	cout<<"\n    ------------------------------------------------------------------------------------------------\n";
+	for(int i=0;i<number_of_process;i++){
+		cout<<"   "<<setw(5)<<process[i].pid<<setw(12)<<process[i].arrival_time<<setw(15)<<process[i].burst_time<<setw(15)<<process[i].wait_time<<setw(20)<<process[i].turnaround_time<<setw(20)<<process[i].response_time<<endl;
+	}
+	cout<<"  ====================================================================================================";
+
+	
+	cout<<"\n\n\nGANTT CHART :\n";
+	//Gantt Chart
+		cout<<endl;
+		for(int k=0;k<total_time;k++){
+			cout<<"------  ";
+		}
+		
+		cout<<endl;
+		for(int k=0;k<total_time;k++){
+			cout<<"| "<<TEMP[k].pid<<"  |  ";
+		}
+		
+		cout<<endl;
+		for(int k=0;k<total_time;k++){
+			cout<<"------  ";
+		}
+		cout<<endl;
+		for(int i=0;i<total_time;i++)
+		cout<<TEMP[i].start_time<<setw(5)<<TEMP[i].complete_time<<setw(3);
+		cout<<endl;
+
+		int l=0;
+		cout<<"\n\n ( start : "<<TEMP[0].start_time<<" ) ------ P"<<TEMP[0].pid<<" ------ (complete : ";
+		while(TEMP[l].pid == TEMP[0].pid){
+			l++;
+		}
+		cout<<TEMP[l-1].complete_time<<") ====>";
+		for(int i=l; i<total_time; i++){
+			int k=i+1;
+			cout<<" ( start : "<<TEMP[i].start_time<<" ) ------ P"<<TEMP[i].pid<<" ------ (complete : ";
+			while(TEMP[k].pid == TEMP[i].pid){
+				k++;
+				i++;
+			}	
+			cout<<TEMP[i].complete_time<<") ====>";
+		}
+		cout<<"ALL PROCESS EXECUTED \n\n";
+			
+		cout<<endl<<"Average Waiting Time = "<<average_wait_time;
+		cout<<endl<<"Average Turnaround Time = "<<average_turnaround_time;
+		cout<<endl<<"Average Response Time = "<<average_response_time<<endl;
+		cout<<endl;
+	
+}
+//======================================================================//
+
+class RoundRobinClass{
+	double total_wait_time, total_turnaround_time, total_response_time, average_wait_time, average_turnaround_time, average_response_time;
+	int total_time,p,counter,time_quantum ;
+	int number_of_process, current_time;
+	ProcessDetail * process;
+	ProcessDetail * TEMP;
+	public:
+		RoundRobinClass(){
+			total_wait_time=0;
+			total_turnaround_time=0; 
+			average_wait_time=0; 
+			average_turnaround_time = 0;
+			total_response_time=0; 
+			average_response_time = 0;
+			current_time=0;
+			total_time=0;
+			p=0;
+			counter=0;
+			time_quantum=0;
+		}
+		void input();
+		void output();
+		void sort_arrival_time();
+		void RoundRobin();
+};
+
+//input
+void RoundRobinClass::input(){
+	cout<<"\nEnter number of processes :";
+	cin>>number_of_process;
+	process = new ProcessDetail[number_of_process];
+	//enter detail for each process
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n\nEnter details for process "<<i+1;
+		process[i].pid = i+1;
+		cout<<"\n\t1. PID :"<<process[i].pid;
+		cout<<"\n\t2. Enter Arrival Time :";
+		cin>>process[i].arrival_time;
+		cout<<"\t3. Enter Burst Time :";
+		cin>>process[i].burst_time;
+		
+		total_time +=process[i].burst_time;  
+		process[i].remaining_burst_time = process[i].burst_time;
+	}
+	cout<<"\nEnter time quantum :";
+	cin>>time_quantum;
+}
+
+//function to sort process according to their arrival time
+void RoundRobinClass::sort_arrival_time(){
+	for(int i=0;i<number_of_process-1;i++){
+		int min = i;
+		for(int j=i+1;j<number_of_process;j++){
+			if(process[j].arrival_time<process[min].arrival_time)
+				min=j;
+		}
+		
+		if(process[min].arrival_time!=process[i].arrival_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//function to imply Round Robin scheduling
+void RoundRobinClass::RoundRobin(){
+	TEMP = new ProcessDetail[total_time];
+	current_time = process[0].arrival_time;
+	while(counter < number_of_process){
+			for(int i=0; i<number_of_process; i++){
+				
+				if(process[i].arrival_time > current_time  && counter!=i){
+					break;
+				}
+					
+				else if(process[i].arrival_time > current_time  && counter==i){
+					current_time = process[i].arrival_time;
+				}	
+				
+				if(process[i].remaining_burst_time == 0){
+					continue;
+				}
+				
+				if(process[i].remaining_burst_time == process[i].burst_time ){
+					process[i].start_time = current_time;
+					process[i].response_time=current_time - process[i].arrival_time;
+				}
+				
+					TEMP[p].pid = process[i].pid;
+					TEMP[p].start_time = current_time;
+				
+				if(process[i].remaining_burst_time > time_quantum){
+					current_time += time_quantum;
+					process[i].remaining_burst_time -= time_quantum;
+				}
+				
+				else if(process[i].remaining_burst_time <= time_quantum) {
+					current_time +=  process[i].remaining_burst_time;
+					process[i].remaining_burst_time = 0;
+					process[i].complete_time = current_time;
+					process[i].turnaround_time = process[i].complete_time - process[i].arrival_time;
+					process[i].wait_time = process[i].turnaround_time - process[i].burst_time;
+					counter++;
+				}
+				
+				
+				TEMP[p].complete_time=current_time;
+				p++;		
+				
+			}
+	}
+}
+
+void RoundRobinClass::output(){
+	
+	cout<<"\n\n  ====================================================================================================\n";
+	
+	cout<<setw(1)<<"\tPID"<<setw(15)<<"Arrival Time"<<setw(15)<<"Burst Time"<<setw(15)<<"Waiting Time"<<setw(20)<<"Turnaround Time"<<setw(20)<<"Response Time";
+	cout<<"\n    ------------------------------------------------------------------------------------------------\n";
+	for(int i=0;i<number_of_process;i++){
+		cout<<"   "<<setw(5)<<process[i].pid<<setw(12)<<process[i].arrival_time<<setw(15)<<process[i].burst_time<<setw(15)<<process[i].wait_time<<setw(20)<<process[i].turnaround_time<<setw(20)<<process[i].response_time<<endl;
+	}
+	cout<<"  ====================================================================================================";
+
+	int l=0;
+	cout<<"\n\n ( start : "<<TEMP[0].start_time<<" ) ------ P"<<TEMP[0].pid<<" ------ (complete : ";
+	while(TEMP[l].pid == TEMP[0].pid){
+		l++;
+	}
+	cout<<TEMP[l-1].complete_time<<") ====>";
+	for(int i=l; i<p; i++){
+	int k=i+1;
+		cout<<" ( start : "<<TEMP[i].start_time<<" ) ------ P"<<TEMP[i].pid<<" ------ (complete : ";
+		while(TEMP[k].pid == TEMP[i].pid){
+			k++;
+			i++;
+	}	
+		cout<<TEMP[i].complete_time<<") ====>";
+	}
+	cout<<"ALL PROCESS EXECUTED \n\n";
+		
+}
+//===================================================================//
+
+class NonPreemptivePriorityClass{
+	double total_wait_time, total_turnaround_time, total_response_time, average_wait_time, average_turnaround_time, average_response_time ;
+	int number_of_process, current_time;
+	ProcessDetail * process;
+	public:
+		NonPreemptivePriorityClass(){
+			total_wait_time=0;
+			total_turnaround_time=0; 
+			average_wait_time=0; 
+			average_turnaround_time = 0;
+			total_response_time=0; 
+			average_response_time = 0;
+			 current_time=0;
+
+		}
+		void input();
+		void priority();
+		void output();
+		void sort_arrival_time();
+		void assign_queue();
+		void sort_priority(int start,int end);	
+};
+
+//input
+void NonPreemptivePriorityClass::input(){
+	cout<<"\nEnter number of processes :";
+	cin>>number_of_process;
+	process = new ProcessDetail[number_of_process];
+	
+	//enter detail for each process
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n\nEnter details for process "<<i+1;
+		process[i].pid = i+1;
+		cout<<"\n\t1. PID :"<<process[i].pid;
+		cout<<"\n\t2. Enter Arrival Time :";
+		cin>>process[i].arrival_time;
+		cout<<"\t3. Enter Burst Time :";
+		cin>>process[i].burst_time;
+		cout<<"\t4. Enter Priority :";
+		cin>>process[i].priority;
+		
+	}
+}
+
+//function to sort process according to their arrival time
+void NonPreemptivePriorityClass::sort_arrival_time(){
+	for(int i=0;i<number_of_process-1;i++){
+		int min = i;
+		for(int j=i+1;j<number_of_process;j++){
+			if(process[j].arrival_time<process[min].arrival_time)
+				min=j;
+		}
+		
+		if(process[min].arrival_time!=process[i].arrival_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//function to sort process with same arrival time according to their burst time
+void NonPreemptivePriorityClass::sort_priority(int start, int end){
+//	if(start-end>1)
+	{
+			for(int i=start;i<end-1;i++){
+			int min = i;
+			for(int j=i+1;j<end;j++){
+				if(process[j].priority<process[min].priority)
+					min=j;
+			}
+			if(process[min].priority!=process[i].priority)
+			{
+				ProcessDetail temp=process[min];
+				process[min]=process[i];
+				process[i]=temp;		
+			}
+		}	
+	}
+	
+
+	
+}
+
+//function to apply sorting based on burst time
+void NonPreemptivePriorityClass::assign_queue(){
+	int i=0;
+	int t=0;
+	current_time=process[0].arrival_time;
+	for(t=0;t<number_of_process;t++){
+		i=t;
+		while(process[i].arrival_time <= current_time && i<number_of_process){
+			i++;
+		}
+		sort_priority(t, i);
+			
+		current_time = current_time+process[t].burst_time;
+	}
+}
+		
+//srtf implementation
+void NonPreemptivePriorityClass::priority(){
+	
+		//for visual representation
+		process[0].start_time = process[0].arrival_time;
+		process[0].complete_time = process[0].arrival_time + process[0].burst_time;
+		 
+		//wait time for first process
+		process[0].wait_time = 0;
+		//turnaround time for first process
+		process[0].turnaround_time = process[0].burst_time;
+		
+		
+		//calculate wait time, turnaroundtime and response time for rest processes
+		for(int i=1;i<number_of_process;i++){
+			//for wait time
+			process[i].wait_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time - process[i].arrival_time ;
+			if(process[i].wait_time<0)
+				process[i].wait_time=0;
+		
+			
+			//for visual representation
+			process[i].start_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time ;
+			process[i].complete_time = process[i-1].arrival_time + process[i-1].wait_time + process[i-1].burst_time + process[i].burst_time;
+			
+			if((process[i].arrival_time - process[i-1].complete_time) > 0){
+				process[i].start_time += process[i].arrival_time - process[i-1].complete_time;
+				process[i].complete_time += process[i].arrival_time - process[i-1].complete_time;
+			}
+			else{
+				process[i].start_time+=0;
+				process[i].complete_time+=0;
+			}
+			
+			//for turnaround time
+			process[i].turnaround_time = process[i].complete_time - process[i].arrival_time ;	
+					 		
+		}
+		
+		//response time
+		for(int i=0;i<number_of_process;i++){
+			process[i].response_time = process[i].start_time - process[i].arrival_time; 
+		}
+		
+		//total wait, turnaround and response time
+		for(int i=0;i<number_of_process;i++){
+			total_wait_time += process[i].wait_time; 
+			total_turnaround_time += process[i].turnaround_time; 
+			total_response_time += process[i].response_time; 
+		}
+		
+		//average wait time
+		average_wait_time = total_wait_time/number_of_process;
+				
+		//average turnaround time
+		average_turnaround_time = total_turnaround_time/number_of_process;
+		
+		//average response time
+		average_response_time = total_response_time/number_of_process;
+}
+
+
+
+//output
+void NonPreemptivePriorityClass::output(){
+	//Tabular Output
+	cout<<"\n\n  ===============================================================================================";
+		cout<<"\n   "<<"   PID"<<"   ArrivalTime"<<"   BurstTime"<<"	Priority"<<"   Wait time"<<"   Turnaround time"<<"     Response Time";
+		cout<<"\n   -----------------------------------------------------------------------------------------------";
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n   "<<setw(5)<<process[i].pid<<setw(9)<<process[i].arrival_time<<setw(14)<<process[i].burst_time<<setw(13)<<process[i].priority<<setw(12)<<process[i].wait_time<<setw(14)<<process[i].turnaround_time<<setw(18)<<process[i].response_time;
+	}
+	cout<<"\n  ===============================================================================================";
+	
+	
+	cout<<"\n\n\nGANTT CHART :\n";
+	//Gantt Chart
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"------------  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|          |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|    "<<process[k].pid<<"     |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"|          |  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+			cout<<"------------  ";
+		}
+		cout<<endl;
+		for(int k=0;k<number_of_process;k++){
+				cout<<process[k].start_time<<setw(11)<<process[k].complete_time<<setw(3);
+		}
+	
+	
+	//Analysis
+	cout<<"\n\nTotal Wait Time :"<<total_wait_time;
+	cout<<"\nAverage Wait Time :"<<average_wait_time;
+	cout<<"\n\nTotal Turnaround Time :"<<total_turnaround_time;
+	cout<<"\nAverage Turnaround Time :"<<average_turnaround_time;
+	cout<<"\n\nTotal Response Time :"<<total_response_time;
+	cout<<"\nAverage Response Time :"<<average_response_time;
+}
+//===================================================================//
+
+class PreemptivePriorityClass{
+	double total_wait_time, total_turnaround_time, total_response_time, average_wait_time, average_turnaround_time, average_response_time;
+	int total_time,q;
+	int number_of_process, current_time;
+	ProcessDetail * process;
+	ProcessDetail * TEMP;
+	public:
+		PreemptivePriorityClass(){
+			total_wait_time=0;
+			total_turnaround_time=0; 
+			average_wait_time=0; 
+			average_turnaround_time = 0;
+			total_response_time=0; 
+			average_response_time = 0;
+			current_time=0;
+			total_time=0;
+			q=0;
+		}
+		void input();
+		void output();
+		void sort_arrival_time();
+		void assign_queue();
+		void sort_priority(int start,int end);	
+};
+
+//input
+void PreemptivePriorityClass::input(){
+	cout<<"\nEnter number of processes :";
+	cin>>number_of_process;
+	process = new ProcessDetail[number_of_process];
+	//enter detail for each process
+	for(int i=0;i<number_of_process;i++){
+		cout<<"\n\nEnter details for process "<<i+1;
+		process[i].pid = i+1;
+		cout<<"\n\t1. PID :"<<process[i].pid;
+		cout<<"\n\t2. Enter Arrival Time :";
+		cin>>process[i].arrival_time;
+		cout<<"\t3. Enter Burst Time :";
+		cin>>process[i].burst_time;
+		cout<<"\t3. Enter Priority : ";
+		cin>>process[i].priority;
+		
+		total_time +=process[i].burst_time;  
+		process[i].remaining_burst_time = process[i].burst_time;
+	}
+}
+
+//function to sort process according to their arrival time
+void PreemptivePriorityClass::sort_arrival_time(){
+	for(int i=0;i<number_of_process-1;i++){
+		int min = i;
+		for(int j=i+1;j<number_of_process;j++){
+			if(process[j].arrival_time<process[min].arrival_time)
+				min=j;
+		}
+		
+		if(process[min].arrival_time!=process[i].arrival_time)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//function to sort process with same arrival time according to their burst time
+void PreemptivePriorityClass::sort_priority(int start, int end){
+	for(int i=start;i<end-1;i++){
+		int min = i;
+		for(int j=i+1;j<end;j++){
+			if(process[j].priority<process[min].priority)
+				min=j;
+		}
+
+		if(process[min].priority!=process[i].priority)
+		{
+			ProcessDetail temp=process[min];
+			process[min]=process[i];
+			process[i]=temp;		
+		}
+	}
+}
+
+//assign queue to processes
+void PreemptivePriorityClass::assign_queue(){
+	TEMP = new ProcessDetail[total_time];
+	int i=0,p=0;
+	while(i<number_of_process){
+		
+		//section for sorting the process wrt their remaining burst time at a particular currenttime
+			int j=i;
+			while(j<number_of_process){
+				if(process[j].arrival_time>current_time){
+					break;
+				}
+				j++;
+			}
+			sort_priority(i,j);
+		
+		if(current_time<process[i].arrival_time)
+			current_time=process[i].arrival_time;
+		
+		if(process[i].remaining_burst_time==process[i].burst_time){
+			process[i].response_time=current_time - process[i].arrival_time;	
+			process[i].start_time=current_time;
+		}
+		TEMP[p].pid = process[i].pid;
+		TEMP[p].start_time = current_time;
+		
+		process[i].remaining_burst_time--;
+		current_time++;
+		
+		if(process[i].remaining_burst_time==0){
+			process[i].complete_time=current_time;
+			process[i].turnaround_time = process[i].complete_time - process[i].arrival_time;
+			process[i].wait_time = process[i].turnaround_time - process[i].burst_time;
+			
+			total_wait_time+=process[i].wait_time;
+			total_turnaround_time+=process[i].turnaround_time;
+			total_response_time+=process[i].response_time;
+			
+			i++;
+		}
+		
+		TEMP[p].complete_time=current_time;
+		p++;		
+	} 
+	
+	average_wait_time= total_wait_time/number_of_process;
+	average_turnaround_time=total_turnaround_time/number_of_process;
+	average_response_time=total_response_time/number_of_process;
+}
+
+//output
+void PreemptivePriorityClass::output(){
+	cout<<"\n\n  ====================================================================================================\n";
+	
+	cout<<setw(1)<<"\tPID"<<setw(15)<<"Arrival Time"<<setw(15)<<"Burst Time"<<setw(15)<<"Waiting Time"<<setw(20)<<"Turnaround Time"<<setw(20)<<"Response Time";
+	cout<<"\n    ------------------------------------------------------------------------------------------------\n";
+	for(int i=0;i<number_of_process;i++){
+		cout<<"   "<<setw(5)<<process[i].pid<<setw(12)<<process[i].arrival_time<<setw(15)<<process[i].burst_time<<setw(15)<<process[i].wait_time<<setw(20)<<process[i].turnaround_time<<setw(20)<<process[i].response_time<<endl;
+	}
+	cout<<"  ====================================================================================================";
+
+	
+	cout<<"\n\n\nGANTT CHART :\n";
+	//Gantt Chart
+		cout<<endl;
+		for(int k=0;k<total_time;k++){
+			cout<<"------  ";
+		}
+		
+		cout<<endl;
+		for(int k=0;k<total_time;k++){
+			cout<<"| "<<TEMP[k].pid<<"  |  ";
+		}
+		
+		cout<<endl;
+		for(int k=0;k<total_time;k++){
+			cout<<"------  ";
+		}
+		cout<<endl;
+		for(int i=0;i<total_time;i++)
+		cout<<TEMP[i].start_time<<setw(5)<<TEMP[i].complete_time<<setw(3);
+		cout<<endl;
+
+		int l=0;
+		cout<<"\n\n| < "<<TEMP[0].start_time<<" > ------ P"<<TEMP[0].pid<<" ------ < ";
+		while(TEMP[l].pid == TEMP[0].pid){
+			l++;
+		}
+		cout<<TEMP[l-1].complete_time<<" > | ====>";
+		for(int i=l; i<total_time; i++){
+			int k=i+1;
+			cout<<" | < "<<TEMP[i].start_time<<" > ------ P"<<TEMP[i].pid<<" ------ < ";
+			while(TEMP[k].pid == TEMP[i].pid){
+				k++;
+				i++;
+			}	
+			cout<<TEMP[i].complete_time<<" > | ====>";
+		}
+		cout<<"ALL PROCESS EXECUTED \n\n";
+			
+		cout<<endl<<"Average Waiting Time = "<<average_wait_time;
+		cout<<endl<<"Average Turnaround Time = "<<average_turnaround_time;
+		cout<<endl<<"Average Response Time = "<<average_response_time<<endl;
+		cout<<endl;
+	
+}
+
+
+//===================================================================//
+int main(){
+	int choice;
+	char ch='y';
+	do{
+		
+		cout<<"\nEnter your choice :\n1. FCFS \n2. SJF \n3. SRTF \n4. Round Robin \n5.Non-Preemptive priority \n6. Preemptive Priority\n";
+		cin>>choice;
+		switch(choice){
+			case 1 : {
+						FCFSclass obj;
+						obj.input();
+						obj.sort_arrival_time();
+						obj.FCFS();
+						obj.output();
+						break;
+					}
+			
+			case 2 : {
+						SJFclass obj;
+						obj.input();
+						obj.sort_arrival_time();
+						obj.assign_queue();
+						obj.SJF();
+						obj.output();
+						break;
+					}		
+			
+			case 3 : {
+						SRTF obj;
+						obj.input();
+						obj.sort_arrival_time();
+						obj.assign_queue();
+						obj.output();
+						break;
+					}
+			
+			case 4 : {
+						RoundRobinClass obj;
+						obj.input();
+						obj.sort_arrival_time();
+						obj.RoundRobin();
+						obj.output();
+						break;
+					}						
+					
+			case 5 : {
+						NonPreemptivePriorityClass obj;
+						obj.input();
+						obj.sort_arrival_time();
+						obj.assign_queue();
+						obj.priority();
+						obj.output();
+						break;
+					}						
+					
+			case 6 : {
+						PreemptivePriorityClass obj;
+						obj.input();
+						obj.sort_arrival_time();
+						obj.assign_queue();
+						obj.output();
+						
+						break;
+					}				
+			default : cout<<"\nWrong Choice !!";
+					  break;			
+		}
+		cout<<"\nDo you want to continue ?? [Y/N] ";
+		cin>>ch;
+	}while(ch=='y' or ch=='Y');
+	getch();
+	return 0;
+}
